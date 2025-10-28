@@ -16,12 +16,12 @@ class MoviesAPI(CustomRequester):
         super().__init__(session=session, base_url=session.base_url)
         self.session = session
 
-    def post_create_movies(self, data=None, expected_status=201):
+    def post_create_movies(self, data=None, expected_status=201, **kwargs):
         """
         Создание фильма.
         :param expected_status: Ожидаемый статус-код.
         """
-        data_movies = data or movie_factory()
+        data_movies = data or movie_factory(**kwargs)
 
         self.last_sent_data = data_movies.copy()
 
