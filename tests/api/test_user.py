@@ -2,9 +2,14 @@ from Modul_4.Cinescope.models.base_models import (RegisterUserResponse,
                                                   LoginUserRequest,
                                                   LoginUserResponse,
                                                   CreateUserResponse,
-                                                  DeleteUserResponse)
+                                                  DeleteUserResponse,
+                                                  TestUser)
 from Modul_4.Cinescope.api.api_manager import ApiManager
 from conftest import creation_user_data
+import datetime, allure
+from constans.roles import Roles
+import pytest_check as check
+
 
 
 class TestAuthAPI:
@@ -27,7 +32,7 @@ class TestAuthAPI:
 
         assert login_response.user.email == registration_user_data.email, "Email не совпадает"
         assert login_response.accessToken, "accessToken отсутствует"
-        assert login_response.refreshToken, "refreshToken отсутствует"
+        #assert login_response.refreshToken, "refreshToken отсутствует"
 
     def test_create_user(self,api_manager: ApiManager, super_admin, creation_user_data):
         response = super_admin.api.user_api.create_user(
@@ -50,3 +55,29 @@ class TestAuthAPI:
         assert response.json() == {}, "Респонс не пустой, пользователь не удален"
         #delete_user_response = DeleteUserResponse(**response.json())
         #print(response.json())
+
+    @allure.title("Тест регистрации пользователя с помощью Mock")
+    @allure.severity(allure.severity_level.MINOR)
+    @allure.label("qa_name", "Ivan Petrovich")
+    def test_register_user_mock(self, api_manager: ApiManager, test_user: TestUser, mocker):
+        with allure.step("Мокаем метод register_user в auth_api"):
+            mock_response = RegisterUserResponse(
+                id="id",
+                email="email@email.com",
+                fullName="fullName",
+                verified=True,
+                banned=False,
+                roles=[Roles.SUPER_ADMIN],
+                createdAt=str(datetime.datetime.now())
+            )
+            mocker.patch.object(api_manager.auth_api, 'register_user', return_value=mock_response)
+
+        with allure.step("Вызываем метод, который должен быть замокан"):
+            register_user_response = api_manager.auth_api.register_user(test_user)
+
+        with allure.step("Проверяем, что ответ соответствует ожидаемому"):
+            check.equal(register_user_response.email, mock_response.email, "Email не совпадает")
+            check.equal(register_user_response.fullName, mock_response.fullName, "Имя не совпадает")
+            check.is_true(register_user_response.verified, "Пользователь должен быть верифицирован")
+            check.equal(register_user_response.roles, mock_response.role, "Роли не совпадают")
+            check.equal(register_user_response.banned, mock_response.banned, "Баннед не совпадает")

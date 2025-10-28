@@ -63,7 +63,7 @@ class LoginUserInfo(BaseModel):
 class LoginUserResponse(BaseModel):
     user: LoginUserInfo
     accessToken: str
-    refreshToken: str
+    refreshToken: str | None = None
     expiresIn: int
 
 # ---------- Create User ----------

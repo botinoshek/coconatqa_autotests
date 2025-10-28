@@ -189,13 +189,16 @@ class TestMoviesAPI:
 
         expected_errors = {'message': ['Поле pageSize имеет максимальную величину 20',
                                        'Поле pageSize имеет минимальную величину 1',
+                                       'Поле pageSize должно быть целым числом',
                                        'Поле pageSize должно быть числом',
                                        'Поле page имеет минимальную величину 1',
+                                       'Поле page должно быть целым числом',
                                        'Поле page должно быть числом',
                                        'Поле minPrice имеет минимальную величину 1',
                                        'Поле minPrice должно быть числом',
                                        'Поле minPrice имеет минимальную величину 1'],
                            'error': 'Bad Request', 'statusCode': 400}
+
         # Проверки
         assert response_data == expected_errors, 'Тело ошибки не совпадает'
 
@@ -207,13 +210,16 @@ class TestMoviesAPI:
         response_data = response.json()
         expected_errors = {'message': ['Поле pageSize имеет максимальную величину 20',
                                        'Поле pageSize имеет минимальную величину 1',
+                                       'Поле pageSize должно быть целым числом',
                                        'Поле pageSize должно быть числом',
                                        'Поле page имеет минимальную величину 1',
+                                       'Поле page должно быть целым числом',
                                        'Поле page должно быть числом',
                                        'Поле minPrice имеет минимальную величину 1',
                                        'Поле minPrice должно быть числом',
                                        'Поле minPrice имеет минимальную величину 1'],
                            'error': 'Bad Request', 'statusCode': 400}
+
         # Проверки
         assert response_data == expected_errors, 'Тело ошибки не совпадает'
 
@@ -250,7 +256,14 @@ class TestMoviesAPI:
                                       'Поле price должно быть числом',
                                       'location must be one of the following values: MSK, SPB',
                                       'Поле published должно быть булевым значением',
-                                      'genreId must not be less than 1', 'Поле genreId должно быть числом'],
+                                      'Поле genreId имеет минимальную величину 1',
+                                      'Поле genreId должно быть целым числом',
+                                      'Поле genreId должно быть числом'],
                           'error': 'Bad Request', 'statusCode': 400}
 
+
         assert updated_data == expected_error
+
+    def test_db_requests(self, db_helper, created_test_user):
+        assert created_test_user == db_helper.get_user_by_id(created_test_user.id)
+        assert db_helper.user_exists_by_email("api1@gmail.com")

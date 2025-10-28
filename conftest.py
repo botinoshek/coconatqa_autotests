@@ -1,6 +1,10 @@
 import requests
 from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
 import pytest
+import psycopg2
+from sqlalchemy.orm import Session
+from db_requester.db_client import get_db_session
+from resources.db_creds import DataBaseCreds
 from utils.data_generator import DataGenerator
 from custom_requester.custom_requester import CustomRequester
 from Modul_4.Cinescope.api.api_manager import ApiManager
@@ -9,6 +13,7 @@ from Modul_4.Cinescope.entities.user import User
 from constans.roles import Roles
 from Modul_4.Cinescope.models.base_models import TestUser
 from Modul_4.Cinescope.models.base_models import CreateUserRequests
+from db_requester.db_helper import DBHelper
 
 @pytest.fixture
 def test_user() -> TestUser:
@@ -104,13 +109,6 @@ def session():
 def api_manager(session):
     return ApiManager(session)
 
-# @pytest.fixture(scope="session")
-# def super_admin():
-#     return {
-#         "email": "api1@gmail.com",
-#         "password": "asdqwe123Q"
-#     }
-
 @pytest.fixture(scope="session")
 def authenticated_admin_session(admin_auth_api, super_admin, session):
     """Возвращает сессию с аутентифицированным администратором"""
@@ -162,8 +160,8 @@ def common_user(user_session, super_admin, creation_user_data):
     new_session = user_session()
 
     common_user = User(
-        creation_user_data['email'],
-        creation_user_data['password'],
+        creation_user_data.email,
+        creation_user_data.password,
         [Roles.USER.value],
         new_session)
 
@@ -185,3 +183,47 @@ def admin(user_session, super_admin, creation_user_data):
     super_admin.api.user_api.create_user(creation_user_data)
     admin.api.auth_api.authenticate(admin.creds)
     return admin
+
+@pytest.fixture
+def connection_db():
+    conn = psycopg2.connect(
+        host=DataBaseCreds.HOSTDB,
+        port=DataBaseCreds.PORTDB,
+        user=DataBaseCreds.USERNAMEDB,
+        password=DataBaseCreds.PASSWORDDB,
+        database=DataBaseCreds.NAMEDB
+    )
+    print("Подключение к БД успешно")
+    yield conn
+    print("Закрыто подключение к БД")
+    conn.close()
+
+@pytest.fixture(scope="module")
+def db_session() -> Session:
+    """
+    Фикстура, которая создает и возвращает сессию для работы с базой данных
+    После завершения теста сессия автоматически закрывается
+    """
+    db_session = get_db_session()
+    yield db_session
+    db_session.close()
+
+@pytest.fixture(scope="function")
+def db_helper(db_session) -> DBHelper:
+    """
+    Фикстура для экземпляра хелпера
+    """
+    db_helper = DBHelper(db_session)
+    return db_helper
+
+@pytest.fixture(scope="function")
+def created_test_user(db_helper):
+    """
+    Фикстура, которая создает тестового пользователя в БД
+    и удаляет его после завершения теста
+    """
+    user = db_helper.create_test_user(DataGenerator.generate_user_data())
+    yield user
+    # Cleanup после теста
+    if db_helper.get_user_by_id(user.id):
+        db_helper.delete_user(user)
