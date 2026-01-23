@@ -9,7 +9,7 @@ class DataGenerator:
     @staticmethod
     def generate_random_email():
         random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-        return f"kek{random_string}@gmail.com"
+        return f"PT{random_string}@gm.com"
 
     @staticmethod
     def generate_random_name():
@@ -27,6 +27,8 @@ class DataGenerator:
         # Гарантируем наличие хотя бы одной буквы и одной цифры
         letters = random.choice(string.ascii_letters)  # Одна буква
         digits = random.choice(string.digits)  # Одна цифра
+        lowercase = random.choice(string.ascii_lowercase)   # строчная
+        uppercase = random.choice(string.ascii_uppercase)   # заглавная
 
         # Дополняем пароль случайными символами из допустимого набора
         special_chars = "?@#$%^&*|:"
@@ -35,7 +37,7 @@ class DataGenerator:
         remaining_chars = ''.join(random.choices(all_chars, k=remaining_length))
 
         # Перемешиваем пароль для рандомизации
-        password = list(letters + digits + remaining_chars)
+        password = list(lowercase + uppercase + letters + digits + remaining_chars)
         random.shuffle(password)
 
         return ''.join(password)
@@ -73,7 +75,7 @@ class DataGenerator:
             'password': DataGenerator.generate_random_password(),
             'created_at': datetime.now(),
             'updated_at': datetime.now(),
-            'verified': False,
+            'verified': True,
             'banned': False,
             'roles': '{USER}'
     }
