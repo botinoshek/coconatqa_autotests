@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from constans.roles import Roles
 
 class BaseUser(BaseModel):
+    id: str | None = None
     email: str
     fullName: str
     password: str
