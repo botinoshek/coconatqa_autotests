@@ -1,7 +1,5 @@
-import time, pytest, allure
-from playwright.sync_api import sync_playwright
+import pytest, allure
 from Modul_4.Cinescope.models.page_object_models import CinescopLoginPage
-from conftest import registered_user
 
 
 @allure.epic("Тестирование UI")
@@ -17,4 +15,4 @@ class TestloginPage:
 
         login_page.assert_was_redirect_to_home_page() # Проверка редиректа на домашнюю страницу
         login_page.make_screenshot_and_attach_to_allure() # Прикрепляем скриншот
-        login_page.assert_allert_was_pop_up() # Проверка появления и исчезновения алерта
+        login_page.assert_alert_was_pop_up() # Проверка появления и исчезновения алерта

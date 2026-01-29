@@ -1,0 +1,19 @@
+2026-01-29 21:27:54 [32mINFO[0m [32mpytest tests/ui/cinescope/test_write_a_comment.py::TestCommentPage::test_comment_by_ui (setup)[0m
+curl -X POST 'https://auth.dev-cinescope.coconutqa.ru/register' \
+-H 'User-Agent: python-requests/2.32.5' \
+-H 'Accept-Encoding: gzip, deflate' \
+-H 'Accept: application/json' \
+-H 'Connection: keep-alive' \
+-H 'Content-Type: application/json' \
+-H 'Content-Length: 149' \
+-d '{"email": "PTndbsttht@gm.com", "fullName": "Jay Hill", "password": "oWwUcluwCvqU48&IbZZ", "passwordRepeat": "oWwUcluwCvqU48&IbZZ", "roles": ["USER"]}' 
+
+2026-01-29 21:27:54 [32mINFO[0m [32mpytest tests/ui/cinescope/test_write_a_comment.py::TestCommentPage::test_comment_by_ui (setup)[0m
+curl -X POST 'https://auth.dev-cinescope.coconutqa.ru/login' \
+-H 'User-Agent: python-requests/2.32.5' \
+-H 'Accept-Encoding: gzip, deflate' \
+-H 'Accept: application/json' \
+-H 'Connection: keep-alive' \
+-H 'Content-Type: application/json' \
+-H 'Content-Length: 65' \
+-d '{"email": "PTndbsttht@gm.com", "password": "oWwUcluwCvqU48&IbZZ"}'

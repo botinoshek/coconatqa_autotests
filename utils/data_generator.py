@@ -81,6 +81,14 @@ class DataGenerator:
     }
 
     @staticmethod
-    @staticmethod
     def generate_random_int(max_value=1000):
         return random.randint(0, max_value)
+
+    @staticmethod
+    def generate_random_comment() -> str:
+        """
+        Генерирует комментарий из 2 русских слов.
+        Пример: "книга дорога"
+        """
+        faker_ru = Faker("ru_RU")
+        return f"{faker_ru.word()} {faker_ru.word()}"
