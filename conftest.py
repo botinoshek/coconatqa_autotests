@@ -1,8 +1,7 @@
 import requests
-from constants import BASE_URL, HEADERS, REGISTER_ENDPOINT, LOGIN_ENDPOINT
+from constants import BASE_URL, HEADERS, LOGIN_ENDPOINT
 import pytest
 import psycopg2
-from playwright.sync_api import sync_playwright
 from sqlalchemy.orm import Session
 from db_requester.db_client import get_db_session
 from resources.db_creds import DataBaseCreds
@@ -15,8 +14,7 @@ from constans.roles import Roles
 from Modul_4.Cinescope.models.base_models import TestUser
 from Modul_4.Cinescope.models.base_models import CreateUserRequests
 from db_requester.db_helper import DBHelper
-from Modul_4.Cinescope.api.tools_api import Tools
-from urllib.parse import urlparse
+from Modul_4.Cinescope.api.movies_api import MoviesAPI
 
 @pytest.fixture
 def test_user() -> TestUser:
@@ -112,7 +110,7 @@ def authenticated_admin_session(admin_auth_api, super_admin, session):
     admin_auth_api.authenticate_admin(super_admin)
     return session
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def user_session():
     user_pool = []
 
@@ -128,7 +126,7 @@ def user_session():
     for user in user_pool:
         user.close_session()
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def super_admin(user_session):
     new_session = user_session()
 
@@ -225,69 +223,19 @@ def created_test_user(db_helper):
     if db_helper.get_user_by_id(user.id):
         db_helper.delete_user(user)
 
-##UI test fixture
-DEFAULT_UI_TIMEOUT = 30000  # Пример значения таймаута
+@pytest.fixture(scope="session")
+def movies_api(super_admin):
+    return MoviesAPI(super_admin.api.session)
 
+@pytest.fixture(scope="session")
+def created_movie(movies_api):
+    resp = movies_api.post_create_movies(expected_status=201)
+    movie_id = resp.json().get("id")
+    assert movie_id, f"В ответе нет id. Ответ: {resp.text}"
 
-@pytest.fixture(scope="session")  # Браузер запускается один раз для всей сессии
-def browser(playwright):
-    browser = playwright.chromium.launch(headless=False)  # headless=True для CI/CD, headless=False для локальной разработки
-    yield browser  # yield возвращает значение фикстуры, выполнение теста продолжится после yield
-    browser.close()  # Браузер закрывается после завершения всех тестов
+    yield movie_id
 
-
-@pytest.fixture(scope="function")
-def context(browser):
-    context = browser.new_context()
-    context.tracing.start(screenshots=True, snapshots=True, sources=True)
-    context.set_default_timeout(DEFAULT_UI_TIMEOUT)
-    yield context
-    log_name = f"trace_{Tools.get_timestamp()}.zip"
-    trace_path = Tools.files_dir('playwright_trace', log_name)
-    context.tracing.stop(path=trace_path)
-    context.close()
-
-@pytest.fixture(scope="function")  # Страница создается для каждого теста
-def page(context):
-    page = context.new_page()
-    yield page  # yield возвращает значение фикстуры, выполнение теста продолжится после yield
-    page.close()  # Страница закрывается после завершения теста
-
-UI_URL = "https://dev-cinescope.coconutqa.ru/"
-AUTH_URL = "https://auth.dev-cinescope.coconutqa.ru/"
-
-@pytest.fixture
-def authorized_page(context, auth_api, test_user):
-    # 1) register
-    auth_api.register_user(test_user)
-
-    # 2) login (в requests появится refresh_token cookie на auth домене)
-    login_data = {"email": test_user.email, "password": test_user.password}
-    resp = auth_api.login_user(login_data, expected_status=200)
-
-    # 3) переносим cookies ИМЕННО на auth-домен
-    pw_cookies = []
-    for c in auth_api.session.cookies:
-        pw_cookies.append({
-            "name": c.name,
-            "value": c.value,
-            "url": AUTH_URL,   # <-- ключевой момент: auth domain
-        })
-
-    assert pw_cookies, "После логина в requests не появилось ни одной cookie"
-    context.add_cookies(pw_cookies)
-
-    # 4) открываем UI
-    token = resp.json().get("accessToken")
-    assert token, "accessToken отсутствует"
-
-    context.add_init_script(f"window.localStorage.setItem('accessToken', {token!r});")
-    page = context.new_page()
-    page.goto(UI_URL)
-
-    # 5) быстрая проверка: если есть элемент, видимый только залогиненным — проверь его
-    # пример (замени на реальный):
-    # assert page.get_by_text("Выйти").is_visible()
-
-    yield page
-    page.close()
+    try:
+        movies_api.delete_movies_id(movie_id, expected_status=200)
+    except Exception:
+        pass

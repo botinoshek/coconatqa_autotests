@@ -1,5 +1,4 @@
-import time, allure, pytest
-from playwright.sync_api import sync_playwright
+import allure, pytest
 from Modul_4.Cinescope.models.page_object_models import CinescopRegisterPage
 from utils.data_generator import DataGenerator
 
@@ -19,4 +18,4 @@ class TestRegisterPage:
 
             register_page.assert_was_redirect_to_login_page()  # Проверка редиректа на страницу /login
             register_page.make_screenshot_and_attach_to_allure() # Прикрепляем скриншот
-            register_page.assert_allert_was_pop_up() # Проверка появления и исчезновения алерта
+            register_page.assert_alert_was_pop_up() # Проверка появления и исчезновения алерта

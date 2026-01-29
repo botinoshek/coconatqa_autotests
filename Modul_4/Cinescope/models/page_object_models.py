@@ -1,9 +1,8 @@
 from random import randint
-from socket import socket
-from time import sleep
 import allure
-
 from playwright.sync_api import Page
+from utils.data_generator import DataGenerator
+from Modul_4.Cinescope.config import settings
 
 class PageAction:
     def __init__(self, page: Page):
@@ -60,7 +59,7 @@ class PageAction:
 class BasePage(PageAction): #Базовая логика доспустимая для всех страниц на сайте
     def __init__(self, page: Page):
         super().__init__(page)
-        self.home_url = "https://dev-cinescope.coconutqa.ru/"
+        self.home_url = settings.base_url
 
         # Общие локаторы для всех страниц на сайте
         self.home_button = "a[href='/' and text()='Cinescope']"
@@ -77,36 +76,36 @@ class BasePage(PageAction): #Базовая логика доспустимая 
         self.wait_redirect_for_url(f"{self.home_url}movies")
 
 class CinescopRegisterPage(BasePage):
-        def __init__(self, page: Page):
-            super().__init__(page)
-            self.url = f"{self.home_url}register"
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self.url = f"{self.home_url}register"
 
-            # Локаторы элементов
-            self.full_name_input = "input[name='fullName']"
-            self.email_input = "input[name='email']"
-            self.password_input = "input[name='password']"
-            self.repeat_password_input = "input[name='passwordRepeat']"
+        # Локаторы элементов
+        self.full_name_input = "input[name='fullName']"
+        self.email_input = "input[name='email']"
+        self.password_input = "input[name='password']"
+        self.repeat_password_input = "input[name='passwordRepeat']"
 
-            self.register_button = "button[type='submit']"
-            self.sign_button = "a[href='/login' and text()='Войти']"
+        self.register_button = "button[type='submit']"
+        self.sign_button = "a[href='/login' and text()='Войти']"
 
         # Локальные action методы
-        def open(self):
-            self.open_url(self.url)
+    def open(self):
+        self.open_url(self.url)
 
-        def register(self, full_name: str, email: str, password: str, confirm_password: str):
-            self.enter_text_to_element(self.full_name_input, full_name)
-            self.enter_text_to_element(self.email_input, email)
-            self.enter_text_to_element(self.password_input, password)
-            self.enter_text_to_element(self.repeat_password_input, confirm_password)
+    def register(self, full_name: str, email: str, password: str, confirm_password: str):
+        self.enter_text_to_element(self.full_name_input, full_name)
+        self.enter_text_to_element(self.email_input, email)
+        self.enter_text_to_element(self.password_input, password)
+        self.enter_text_to_element(self.repeat_password_input, confirm_password)
 
-            self.click_element(self.register_button)
+        self.click_element(self.register_button)
 
-        def assert_was_redirect_to_login_page(self):
-            self.wait_redirect_for_url(f"{self.home_url}login")
+    def assert_was_redirect_to_login_page(self):
+        self.wait_redirect_for_url(f"{self.home_url}login")
 
-        def assert_allert_was_pop_up(self):
-            self.check_pop_up_element_with_text("Подтвердите свою почту")
+    def assert_alert_was_pop_up(self):
+        self.check_pop_up_element_with_text("Подтвердите свою почту")
 
 
 class CinescopLoginPage(BasePage):
@@ -134,7 +133,7 @@ class CinescopLoginPage(BasePage):
     def assert_was_redirect_to_home_page(self):
         self.wait_redirect_for_url(self.home_url)
 
-    def assert_allert_was_pop_up(self):
+    def assert_alert_was_pop_up(self):
         self.check_pop_up_element_with_text("Вы вошли в аккаунт")
 
 class CinescopCommentPage(BasePage):
@@ -143,27 +142,37 @@ class CinescopCommentPage(BasePage):
         self.url = f"{self.home_url}"
         self.random_score = randint(1,5)
 
-        self.button_more_detailed = "a[href^='/movies/'] button:has-text('Подробнее')"
+        #self.button_more_detailed = f"a[href^='/movies/'] button:has-text('Подробнее')"
         self.input_comment = "textarea[name='text']"
         self.button_list_score_film = "button[role='combobox']"
         self.button_submit = "button[type='submit']"
         self.score_select = "select[aria-hidden='true']"
+        self.check_comment = "p.line-clamp-8"
+        self.comment = DataGenerator.generate_random_comment()
 
-    @allure.step(f"Переход на страницу")
     def open(self):
-        self.open_url(self.url)
+        with allure.step(f"Переход на страницу {self.url}"):
+            self.open_url(self.url)
 
-    @allure.step("Комментарий с текстом и оценкой 1-5")
-    def write_a_comment(self, comment: str):
-        score = randint(1, 5)
+    def write_a_comment(self):
+        with allure.step(f"Комментарий с текстом: {self.comment}. И оценкой: {self.random_score}"):
+            self.enter_text_to_element(self.input_comment, self.comment)
+            self.page.select_option(self.score_select, value=str(self.random_score))
+
+    def click_button_more_detailed(self):
         self.click_element(self.button_more_detailed)
-        self.enter_text_to_element(self.input_comment, comment)
-        self.page.select_option(self.score_select, value=str(score))
+
+    def click_button_submit(self):
         self.click_element(self.button_submit)
 
-
-
-    def assert_aller_was_pop_up(self):
+    def assert_alert_was_pop_up(self):
         self.check_pop_up_element_with_text("Отзыв успешно создан")
+
+    def assert_check_comment(self):
+        with allure.step(f"Проверить, что комментарий отображается: {self.comment}"):
+            locator = self.page.get_by_text(self.comment, exact=True)
+            locator.first.wait_for(state="visible")
+
+
 
 
