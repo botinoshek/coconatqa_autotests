@@ -1,15 +1,15 @@
 from api.tools_api import Tools
 from config import settings
-import pytest, json
+from models.page_object_models import CinescopLoginPage
+from resources.user_creds import SuperAdminCreds
+import pytest
 import os
-import requests
-import re
 
-# Храним браузеры Playwright внутри репозитория, чтобы не упираться в права на ~/Library.
-os.environ.setdefault(
-    "PLAYWRIGHT_BROWSERS_PATH",
-    os.path.join(os.getcwd(), ".playwright-browsers"),
-)
+"""
+Не фиксируем путь Playwright браузеров внутри репозитория.
+Playwright использует стандартный кеш (~/.cache/ms-playwright),
+что предотвращает попадание браузеров в git и раздувание проекта.
+"""
 
 @pytest.fixture(scope="session")  # Браузер запускается один раз для всей сессии
 def browser(playwright):
@@ -44,28 +44,24 @@ def page(context):
     page.close()  # Страница закрывается после завершения теста
 
 @pytest.fixture
-def created_movie(authorized_page):
-    """
-    UI-версия фикстуры: берем первый доступный фильм из /movies.
-    Это обход для случаев, когда auth API недоступен по сети.
-    """
-    page = authorized_page
-    page.goto(f"{settings.base_url}movies")
-    first_link = page.get_by_role("link", name="Подробнее").first
-    first_link.wait_for()
-    href = first_link.get_attribute("href")
-    assert href, "Ссылка на фильм не найдена на странице /movies"
-    match = re.search(r"/movies/(\d+)", href)
-    assert match, f"Не удалось извлечь movie_id из href: {href}"
-    return int(match.group(1))
+def admin_page(page):
+    if not SuperAdminCreds.USERNAME or not SuperAdminCreds.PASSWORD:
+        pytest.skip("Не заданы SUPER_ADMIN_USERNAME/SUPER_ADMIN_PASSWORD в .env")
+
+    login_page = CinescopLoginPage(page)
+    login_page.open()
+    login_page.login(SuperAdminCreds.USERNAME, SuperAdminCreds.PASSWORD)
+    login_page.assert_was_redirect_to_home_page()
+
+    return page
 
 @pytest.fixture
 def authorized_page(context, auth_api, test_user):
     # 1) register
     auth_api.register_user(test_user)
 
+    # 2) login через UI (без прокидывания токена)
     page = context.new_page()
-    # 2) login через UI, чтобы гарантированно появился блок комментариев
     page.goto(f"{settings.base_url}login")
     page.get_by_role("textbox", name="Email").fill(test_user.email)
     page.get_by_role("textbox", name="Пароль").fill(test_user.password)

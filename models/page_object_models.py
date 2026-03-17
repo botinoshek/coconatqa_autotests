@@ -88,6 +88,7 @@ class CinescopRegisterPage(BasePage):
 
         self.register_button = "button[type='submit']"
         self.sign_button = "a[href='/login' and text()='Войти']"
+        self.error_message = "span.text-red-500"
 
         # Локальные action методы
     def open(self):
@@ -107,6 +108,28 @@ class CinescopRegisterPage(BasePage):
     def assert_alert_was_pop_up(self):
         self.check_pop_up_element_with_text("Подтвердите свою почту")
 
+    def assert_stay_on_register_page(self):
+        with allure.step("Проверка, что остались на странице регистрации"):
+            assert self.page.url == self.url, "Неожиданный редирект со страницы регистрации"
+
+    def assert_success_alert_not_visible(self, timeout_ms: int = 1500):
+        with allure.step("Проверка, что алерт об успешной регистрации не появился"):
+            locator = self.page.get_by_text("Подтвердите свою почту")
+            expect(locator).not_to_be_visible(timeout=timeout_ms)
+
+    def is_register_button_disabled(self) -> bool:
+        with allure.step("Проверка статуса кнопки регистрации (disabled)"):
+            return self.page.locator(self.register_button).is_disabled()
+
+    def is_error_message_visible(self) -> bool:
+        with allure.step("Проверка наличия сообщения об ошибке"):
+            return self.page.locator(self.error_message).is_visible()
+
+    def get_error_texts(self) -> list[str]:
+        with allure.step("Получение текстов ошибок формы регистрации"):
+            locator = self.page.locator("p[role='alert'], span.text-red-500, p.text-red-500")
+            return [t.strip() for t in locator.all_text_contents() if t.strip()]
+
 
 class CinescopLoginPage(BasePage):
     def __init__(self, page: Page):
@@ -119,6 +142,7 @@ class CinescopLoginPage(BasePage):
 
         self.login_button = "button[type='submit']"
         self.register_button = "a[href='/register' and text()='Зарегистрироваться']"
+        self.error_message = "span.text-red-500"
 
 
     # Локальные action методы
@@ -135,6 +159,20 @@ class CinescopLoginPage(BasePage):
 
     def assert_alert_was_pop_up(self):
         self.check_pop_up_element_with_text("Вы вошли в аккаунт")
+
+    def assert_stay_on_login_page(self):
+        with allure.step("Проверка, что остались на странице логина"):
+            assert self.page.url == self.url, "Неожиданный редирект со страницы логина"
+
+    def assert_success_alert_not_visible(self, timeout_ms: int = 1500):
+        with allure.step("Проверка, что алерт об успешном входе не появился"):
+            locator = self.page.get_by_text("Вы вошли в аккаунт")
+            expect(locator).not_to_be_visible(timeout=timeout_ms)
+
+    def get_error_texts(self) -> list[str]:
+        with allure.step("Получение текстов ошибок формы логина"):
+            locator = self.page.locator("p[role='alert'], span.text-red-500, p.text-red-500")
+            return [t.strip() for t in locator.all_text_contents() if t.strip()]
 
 class CinescopCommentPage(BasePage):
     """Page Object для страницы фильма с функционалом комментирования"""
@@ -252,3 +290,65 @@ class CinescopCommentPage(BasePage):
                 error_locator = self.page.locator(self.error_message)
                 error_locator.wait_for(state="visible")
                 assert error_locator.is_visible(), "Сообщение об ошибке не отображается"
+
+
+class CinescopAdminMoviesPage(BasePage):
+    """Page Object для админской страницы фильмов и формы создания"""
+
+    def __init__(self, page: Page):
+        super().__init__(page)
+        self.url = f"{self.home_url}dashboard/movies"
+
+        # Локаторы формы создания фильма
+        self.add_movie_button = "button:has-text('Добавить фильм')"
+        self.dialog_title = "text=Добавление фильма"
+        self.name_input = "#name"
+        self.description_textarea = "#description"
+        self.price_input = "#price"
+        self.location_combobox = "#location"
+        self.image_url_input = "#imageUrl"
+        self.genre_combobox = "#genreId"
+        self.published_checkbox = "#published"
+        self.submit_button = "button[type='submit']"
+
+        self.error_message = "p[role='alert'], span.text-red-500, p.text-red-500"
+
+    def open(self):
+        self.open_url(self.url)
+
+    def open_create_movie_dialog(self):
+        with allure.step("Открытие формы создания фильма"):
+            self.page.locator(self.add_movie_button).click()
+            self.page.locator(self.dialog_title).wait_for(state="visible")
+
+    def fill_movie_form(self, name: str, description: str, price: int | str, image_url: str):
+        with allure.step("Заполнение формы создания фильма"):
+            self.page.locator(self.name_input).fill(str(name))
+            self.page.locator(self.description_textarea).fill(str(description))
+            self.page.locator(self.price_input).fill(str(price))
+            self.page.locator(self.image_url_input).fill(str(image_url))
+
+    def select_genre(self, genre_name: str):
+        with allure.step(f"Выбор жанра: {genre_name}"):
+            self.page.locator(self.genre_combobox).click(force=True)
+            option = self.page.get_by_role("option", name=genre_name)
+            option.wait_for(state="visible")
+            option.click()
+
+    def submit(self):
+        with allure.step("Отправка формы создания фильма"):
+            self.page.locator(self.submit_button).click()
+
+    def assert_dialog_closed(self, timeout_ms: int = 3000):
+        with allure.step("Проверка, что форма создания закрылась"):
+            locator = self.page.locator(self.dialog_title)
+            expect(locator).not_to_be_visible(timeout=timeout_ms)
+
+    def get_error_texts(self) -> list[str]:
+        with allure.step("Получение текстов ошибок формы создания фильма"):
+            locator = self.page.locator(self.error_message)
+            return [t.strip() for t in locator.all_text_contents() if t.strip()]
+
+    def get_image_url_validation_message(self) -> str:
+        with allure.step("Получение tooltip-ошибки у поля ссылки на изображение"):
+            return self.page.locator(self.image_url_input).evaluate("el => el.validationMessage")

@@ -1,9 +1,7 @@
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional
 import datetime
-import re
-from typing import List
-from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional
+
+from pydantic import BaseModel, Field, field_validator, field_serializer
 from constans.roles import Roles
 
 class BaseUser(BaseModel):
@@ -24,8 +22,9 @@ class TestUser(BaseUser):
     verified: Optional[bool] = None
     banned: Optional[bool] = None
 
-    class Config:
-        json_encoders = {Roles: lambda v: v.value}
+    @field_serializer("roles")
+    def serialize_roles(self, roles: list[Roles]):
+        return [role.value for role in roles]
 
 # ---------- Register ----------
 
