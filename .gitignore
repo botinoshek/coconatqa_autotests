@@ -10,3 +10,9 @@ __pycache__/
 *.csv
 *.env
 .env
+.pytest_cache/
+allure-results/
+.playwright-browsers/
+.playwright-mcp/
+files/playwright_trace/
+screenshot.png
