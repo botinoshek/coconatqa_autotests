@@ -33,7 +33,7 @@ class DataGenerator:
         # Дополняем пароль случайными символами из допустимого набора
         special_chars = "?@#$%^&*|:"
         all_chars = string.ascii_letters + string.digits + special_chars
-        remaining_length = random.randint(6, 18)  # Остальная длина пароля
+        remaining_length = random.randint(4, 16)  # Остальная длина пароля (итого 8-20)
         remaining_chars = ''.join(random.choices(all_chars, k=remaining_length))
 
         # Перемешиваем пароль для рандомизации

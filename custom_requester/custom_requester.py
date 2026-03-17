@@ -2,7 +2,7 @@ import json
 from constants import RED, GREEN, RESET
 import logging
 import os
-from Modul_4.Cinescope.models.base_models import BaseModel
+from models.base_models import BaseModel
 
 class CustomRequester:
     """
@@ -20,7 +20,7 @@ class CustomRequester:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
-    def send_request(self, method, endpoint, data=None, expected_status=200, need_logging=True, params=None):
+    def send_request(self, method, endpoint, data=None, expected_status=201, need_logging=True, params=None):
         url = f"{self.base_url}{endpoint}"
         if isinstance(data, BaseModel):
             data = json.loads(data.model_dump_json(exclude_none=True, exclude_unset=True))

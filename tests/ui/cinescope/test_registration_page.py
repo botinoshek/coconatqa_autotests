@@ -1,5 +1,5 @@
 import allure, pytest
-from Modul_4.Cinescope.models.page_object_models import CinescopRegisterPage
+from models.page_object_models import CinescopRegisterPage
 from utils.data_generator import DataGenerator
 
 @allure.epic("Тестирование UI")

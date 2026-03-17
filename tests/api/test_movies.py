@@ -1,5 +1,5 @@
 import pytest
-from Modul_4.Cinescope.api.api_manager import ApiManager
+from api.api_manager import ApiManager
 
 class TestMoviesAPI:
     def test_post_create_movies(self, api_manager: ApiManager, super_admin):

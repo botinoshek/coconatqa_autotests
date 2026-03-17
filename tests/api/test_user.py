@@ -1,10 +1,10 @@
-from Modul_4.Cinescope.models.base_models import (RegisterUserResponse,
+from models.base_models import (RegisterUserResponse,
                                                   LoginUserRequest,
                                                   LoginUserResponse,
                                                   CreateUserResponse,
                                                   DeleteUserResponse,
                                                   TestUser)
-from Modul_4.Cinescope.api.api_manager import ApiManager
+from api.api_manager import ApiManager
 from conftest import creation_user_data
 import datetime, allure
 from constans.roles import Roles

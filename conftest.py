@@ -7,14 +7,14 @@ from db_requester.db_client import get_db_session
 from resources.db_creds import DataBaseCreds
 from utils.data_generator import DataGenerator
 from custom_requester.custom_requester import CustomRequester
-from Modul_4.Cinescope.api.api_manager import ApiManager, AuthAPI
+from api.api_manager import ApiManager, AuthAPI
 from resources.user_creds import SuperAdminCreds
-from Modul_4.Cinescope.entities.user import User
+from entities.user import User
 from constans.roles import Roles
-from Modul_4.Cinescope.models.base_models import TestUser
-from Modul_4.Cinescope.models.base_models import CreateUserRequests
+from models.base_models import TestUser
+from models.base_models import CreateUserRequests
 from db_requester.db_helper import DBHelper
-from Modul_4.Cinescope.api.movies_api import MoviesAPI
+from api.movies_api import MoviesAPI
 
 @pytest.fixture
 def test_user() -> TestUser:
@@ -25,7 +25,7 @@ def test_user() -> TestUser:
         fullName=DataGenerator.generate_random_name(),
         password=random_password,
         passwordRepeat=random_password,
-        roles=[Roles.USER.value]
+        roles=[Roles.USER]
     )
 
 @pytest.fixture

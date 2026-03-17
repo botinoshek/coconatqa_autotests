@@ -2,10 +2,10 @@ from tkinter.font import names
 
 import psycopg2
 import sqlalchemy
-from Modul_4.Cinescope.api.api_manager import ApiManager
+from api.api_manager import ApiManager
 from faker import Faker
 
-from Modul_4.Cinescope.api.movies_api import faker
+from api.movies_api import faker
 
 
 class TestDBMovies:

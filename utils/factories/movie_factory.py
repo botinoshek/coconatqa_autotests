@@ -1,5 +1,7 @@
 from faker import Faker
 from utils.data_generator import DataGenerator
+import uuid
+
 faker = Faker()
 
 generate_location = DataGenerator.generate_location()
@@ -15,7 +17,7 @@ def movie_factory(
         genreId=None,
 ):
     return {
-        "name": name or faker.word(),
+        "name": name or f"{faker.word()}_{str(uuid.uuid4())[:8]}",
         "imageUrl": imageUrl or faker.image_url(width=300, height=200),
         "price": price if price is not None else faker.random_int(1, 200),
         "description": description or faker.text(),

@@ -1,7 +1,7 @@
-from Modul_4.Cinescope.api.auth_api import AuthAPI
-from Modul_4.Cinescope.api.user_api import UserAPI
-from Modul_4.Cinescope.api.admin_user_api import AdminAuthAPI
-from Modul_4.Cinescope.api.movies_api import MoviesAPI
+from .auth_api import AuthAPI
+from .user_api import UserAPI
+from .admin_user_api import AdminAuthAPI
+from .movies_api import MoviesAPI
 
 
 
